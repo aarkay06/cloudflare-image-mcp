@@ -100,21 +100,28 @@ jobs:
           compatibility_date = "2025-01-01"
           main = "src/index.ts"
 
-          # R2 Bucket binding
-          [[r2_buckets]]
-          binding = "IMAGE_BUCKET"
-          bucket_name = "cloudflare-image-mcp-images"
-
           # Environment variables
           [vars]
           IMAGE_EXPIRY_HOURS = "24"
           # API_KEYS is set as secret via wrangler secret put
           EOF
 
+          if [ -n "${{ secrets.R2_BUCKET_NAME }}" ]; then
+            cat >> wrangler.toml << EOF
+
+          # R2 Bucket binding
+          [[r2_buckets]]
+          binding = "IMAGE_BUCKET"
+          bucket_name = "${{ secrets.R2_BUCKET_NAME }}"
+          EOF
+            echo "✅ R2 binding configured for bucket: ${{ secrets.R2_BUCKET_NAME }}"
+          else
+            echo "ℹ️ R2_BUCKET_NAME not set; deploying without R2 binding"
+          fi
+
           echo "✅ wrangler.toml generated successfully"
           # Only show non-sensitive parts
           echo "Worker name: ${{ env.WORKERS_NAME }}"
-          echo "Bucket: cloudflare-image-mcp-images"
           echo "(wrangler.toml content hidden for security)"
 
       - name: Set deployment metadata
@@ -128,6 +135,9 @@ jobs:
         run: |
           if [ -z "${{ secrets.API_KEYS }}" ]; then
             echo "ℹ️ API_KEYS not set (endpoints are public)"
+          fi
+          if [ -z "${{ secrets.R2_BUCKET_NAME }}" ]; then
+            echo "ℹ️ R2_BUCKET_NAME not set (image URL storage is disabled)"
           fi
           echo "✅ Secrets check completed"
 
@@ -231,6 +241,7 @@ jobs:
           echo "### Secrets Configured" >> $GITHUB_STEP_SUMMARY
           echo "- API_KEYS: ${{ secrets.API_KEYS != '' && '✅ Configured' || '❌ Missing' }}" >> $GITHUB_STEP_SUMMARY
           echo "- AI_ACCOUNTS: ${{ secrets.AI_ACCOUNTS != '' && '✅ Configured (multi-account)' || 'ℹ️ Not set (using deploy credentials)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME != '' && '✅ Configured' || 'ℹ️ Not set (deploys without R2 binding)' }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Cleanup sensitive files
         if: always()

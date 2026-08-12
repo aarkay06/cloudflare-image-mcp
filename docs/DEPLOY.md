@@ -61,6 +61,7 @@ Click **New repository secret** and add these:
 | `CLOUDFLARE_API_TOKEN` | The API token you just created | Yes |
 | `API_KEYS` | Comma-separated list of API keys (e.g., `key1,key2,key3`) | Optional |
 | `AI_ACCOUNTS` | JSON array of `{"account_id","api_token"}` for multi-account AI inference (see [Credentials Setup](CREDENTIALS_SETUP.md#ai_accounts-format)) | Optional |
+| `R2_BUCKET_NAME` | Existing R2 bucket name for image URL storage (e.g., `cloudflare-image-mcp-images`) | Optional |
 | `TZ` | Your timezone (e.g., `America/New_York`, `Asia/Singapore`) | Optional |
 
 **Note on `API_KEYS`**: If set, all OpenAI API endpoints, MCP endpoints, and the web frontend will require authentication via the `Authorization: Bearer YOUR_KEY` header or `?key=YOUR_KEY` query parameter.
@@ -117,7 +118,7 @@ The file `.github/workflows/deploy-workers.yml` handles everything:
 | Issue | Solution |
 |-------|----------|
 | `Authentication error` | Check that `CLOUDFLARE_API_TOKEN` has the correct permissions |
-| `R2 bucket not found` | Create an R2 bucket named `image-generation` in your Cloudflare dashboard, or update `bucket_name` in the workflow |
+| `Please enable R2 through the Cloudflare Dashboard [code: 10042]` | Set `R2_BUCKET_NAME` only if R2 is enabled on your account. If R2 is unavailable, leave `R2_BUCKET_NAME` unset to deploy without R2 binding. |
 | `Workers AI not enabled` | Go to Cloudflare Dashboard → AI → Workers AI and accept the terms |
 | `Deployment failed` | Check the Actions logs for specific error messages |
 
